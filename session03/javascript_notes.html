@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Notes app</title>
+		<script type="text/template" name="note">
+			<div class="note" data-id="%id%">
+				<h3>%title%</h3>
+				<pre class="notecontent">%content%</pre>
+				<button data-id="%id%" name="update">Update</button>
+				<button data-id="%id%" name="delete">Delete</button>
+			</div>
+		</script>
+		<script type="text/javascript">
+			var notesapp = {};
+
+			var Note = function(){
+				this.title = '';
+				this.content = '';
+				this.id = String(Date.now());
+			};
+
+			Note.prototype.render = function(){
+				// does not work in IE...
+				var template = document.scripts.note.innerHTML;
+				var note = this;
+				['id', 'title', 'content'].forEach(function(prop){
+					var reg = new RegExp('%'+prop+'%', 'g');
+					template = template.replace(reg, note[prop]);
+				});
+				return template;
+			};
+
+			notesapp.notes = [];
+
+			notesapp.createnote = function(title, content){
+				var note = new Note();
+				note.title = title;
+				note.content = content;
+				this.notes.push(note);
+				this.elm.innerHTML += note.render();
+				this.save();
+			};
+
+			notesapp.getNoteById = function(id){
+				var note;
+				for(var i = 0; i < this.notes.length; i++){
+					var n = this.notes[i];
+					if(n.id == id){
+						note = n;
+						i = this.notes.length;
+					}
+				}
+				return note;
+			};
+
+			notesapp.updatenote = function(id, title, content){
+				var note = this.getNoteById(id);
+				note.title = title;
+				note.content = content;
+				this.elm.querySelector('div[data-id = "' + id + '"]').outerHTML = note.render();
+				this.save();
+			};
+			notesapp.deletenote = function(id){
+				var note = this.getNoteById(id);
+				var noteindex = this.notes.indexOf(note);
+				this.notes.splice(noteindex, 1);
+				this.elm.querySelector('div[data-id = "' + id + '"]').outerHTML = '';
+				this.save();
+			};
+
+			notesapp.render = function(){
+				var notesStr = '';
+				this.notes.forEach(function(note){
+					notesStr += note.render();
+				});
+				this.elm.innerHTML = notesStr;
+			};
+
+			notesapp.load = function(){
+				var notes = this.notes;
+				if(localStorage.notes){
+					var tempArr = JSON.parse(localStorage.notes);
+					tempArr.forEach(function(n){
+						var note = new Note();
+						note.id = n.id;
+						note.title = n.title;
+						note.content = n.content;
+						notes.push(note);
+					});
+				}
+			};
+
+			notesapp.clear = function(){
+				this.notes = [];
+				this.elm.innerHTML = '';
+				this.save();
+			};
+
+			notesapp.save = function(){
+				localStorage.notes = JSON.stringify(this.notes);
+			};
+
+			window.addEventListener('load', function(){
+				notesapp.elm = document.getElementById('notes');
+				notesapp.load();
+				notesapp.render();
+
+				/* events in the page */
+				document.forms.menu.addEventListener('click', function(e){
+					e.preventDefault();
+					switch(e.target.name){
+						case 'new':
+							console.log('new');
+							document.forms.createnote.classList.remove('hide');
+							break;
+						case 'clear':
+							notesapp.clear();
+							break;
+					}
+				}, false);
+
+				document.forms.createnote.addEventListener('submit', function(e){
+					e.preventDefault();
+					notesapp.createnote(e.target.title.value, e.target.content.value);
+					e.target.reset();
+					e.target.classList.add('hide');
+				}, false);
+
+				document.forms.updatenote.addEventListener('submit', function(e){
+					e.preventDefault();
+					notesapp.updatenote(e.target.id.value, e.target.title.value, e.target.content.value);
+					e.target.reset();
+					e.target.classList.add('hide');
+				}, false);
+
+				document.getElementById('notes').addEventListener('click', function(e){
+					//console.log(e.target.attributes['data-id']);
+					switch(e.target.name){
+						case 'update':
+							var note = notesapp.getNoteById(e.target.attributes['data-id'].value);
+							var form = document.forms.updatenote;
+							form.id.value = note.id;
+							form.title.value = note.title;
+							form.content.value = note.content;
+							form.classList.remove('hide');
+							break;
+						case 'delete':
+							notesapp.deletenote(e.target.attributes['data-id'].value);
+							break;
+					}
+				}, false);
+			}, false);
+		</script>
+		<style type="text/css">
+			.hide {
+				display: none;
+			}
+
+			body > form {
+				position: absolute;
+				width: 300px;
+				height: 200px;
+				background-color: white;
+				left: calc(50% - 150px);
+				top: calc(50% - 100px);
+				padding: 1em;
+				border: 1px solid black;
+			}
+
+			div.note {
+				border: 1px solid black;
+				padding: .5em;
+				width: 10em;
+				margin: .5em;
+			}
+
+			div.note pre {
+				height: 6em;
+				overflow: scroll;
+			}
+
+			div.note button {
+				border: none;
+				padding: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="menu">
+			<form name="menu">
+				<button name="new">New note</button>
+				<button name="clear">Clear all</button>
+			</form>
+		</div>
+		<div id="notes"></div>
+		<form name="createnote" class="hide">
+			<input type="text" name="title" placeholder="Title here" />
+			<textarea name="content" placeholder="Content here"></textarea>
+			<button name="create">Create</button>
+		</form>
+		<form name="updatenote" class="hide">
+			<input type="text" name="title" placeholder="Title here" />
+			<input type="hidden" name="id" />
+			<textarea name="content" placeholder="Content here"></textarea>
+			<button name="update">Update</button>
+		</form>
+	</body>
+</html>
