@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>JavaScript - Event</title>
+		<script type="text/javascript">
+			var load = function(){
+				alert('load');
+			};
+
+			window.onload = function(){
+				alert('document.onload');
+			};
+
+			window.addEventListener('load', function(){
+				alert('addEventListener load');
+
+				var h1 = document.querySelector('body > h1');
+
+				h1.addEventListener('click', function(e){
+					e.target.style.color = "red";
+				}, false);
+
+				h1.addEventListener('mouseout', function(e){
+					e.target.style.color = "black";
+				}, false);
+			});
+		</script>
+	</head>
+	<body onload="load();">
+		<h1>Events</h1>
+	</body>
+</html>

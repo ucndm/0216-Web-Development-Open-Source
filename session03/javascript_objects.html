@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>JavaScript - Objects</title>
+		<script type="text/javascript">
+			var arr = [];
+			console.log(typeof arr);
+			//arr.push('Hello World');
+			console.log(arr);
+
+			var obj = {};
+			console.log(typeof obj);
+			obj.title = 'Hello World';
+			console.log(obj.title);
+
+			var User = function(fname, lname){
+				this.fname = fname;
+				this.lname = lname;
+
+				this.fullName = function(){
+					return this.fname + ' ' + this.lname;
+				};
+			};
+
+			var u1 = new User('Bo', 'Larsen');
+			console.log(u1);
+			console.log(u1.fullName());
+
+			arr.push(u1);
+			arr.push(new User('John', 'Doe'));
+
+			arr.forEach(function(user){
+				console.log(user.fullName());
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Object</h1>
+	</body>
+</html>
