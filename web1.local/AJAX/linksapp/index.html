@@ -26,16 +26,21 @@
 			<li data-id="<%id%>">
 				<button data-action="edit">Edit</button>
 				<button data-action="delete">Delete</button>
-				<a href="<%url%>" data-id="<%id%>" target="_blank"><%title%></a>
+				<a href="<%url%>" data-id="<%id%>" target="_blank"><%title%> (<%urllength%>)</a>
 			</li>
 		</script>
 
 		<script type="text/javascript">
 			var linksElm, linksArr = [];
 
-			var Link = function(url, title){
+			var Link = function(url, title, id){
 				this.url = url;
 				this.title = title;
+				this.id = id;
+			};
+
+			Link.prototype.urllength = function(){
+				return this.url.length;
 			};
 
 			var render = function(data, template){
@@ -52,7 +57,10 @@
 				//and replace with the value from data
 				names.forEach(function(name){
 					var reg = new RegExp('<%'+name+'%>', 'g');
-					template = template.replace(reg, data[name]);
+					//get value from object (link)
+					//test if it is a function or property
+					var value = (typeof data[name] == 'function') ? data[name]() : data[name];
+					template = template.replace(reg, value);
 				});
 				return template;
 			};
@@ -62,7 +70,10 @@
 				if(xhr.readyState == 4 && xhr.status == 200){
 					var xhrObj = JSON.parse(xhr.response);
 					//override the linksArr;
-					linksArr = xhrObj.links;
+					linksArr = [];
+					xhrObj.links.forEach(function(link){
+						linksArr.push(new Link(link.url, link.title, Number.parseInt(link.id)));
+					});
 					//empty the list of links
 					var tmpHtml = '';
 					linksArr.forEach(function(link){
